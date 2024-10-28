@@ -2,6 +2,7 @@
 #include <string>
 #include <queue>
 #include <vector>
+#include <map>
 using namespace std;
 //#include "Node.h"
 //#include "Tree.h"
@@ -76,7 +77,37 @@ int findZero(vector<int> board) {
     }
     return 0;
 }
+int incorrectTiles(vector<int> board) {
+    int count = 0;
+    for(int i = 0; i < board.size(); i++) {
+        if(board.at(i) != ((i+1)%9)) {
+            count++;
+        }
+    }
+    return count;
+}
 
+
+int totDistance(vector<int> board) {
+    int count = 0;
+    int index = 0;
+    int indexNumY = 0;
+    int indexNumX = 0;
+    for(int i = 0; i < board.size(); i++) {
+        for(int j = 0; j < board.size(); j++) {
+            if(board.at(j) == i+1) {
+                index = j;
+                indexNumX = j%3;
+                indexNumY = j/3;
+            }
+        }
+        int currNumX = i%3;
+        int currNumY = (i/3);
+        
+        count += (abs(indexNumX - currNumX) + abs(indexNumY - currNumY));
+    }
+    return count;
+}
 
 vector<int> UCS(vector<int> startBoard, int coordinate) {
     queue<vector<int>> possibleBoards;
@@ -95,7 +126,6 @@ vector<int> UCS(vector<int> startBoard, int coordinate) {
         else {
             if(sideValid((coordinate%3)+1) && notExplored(exploredBoards, moveBlankRight(currBoard,coordinate))) {
                 possibleBoards.push(moveBlankRight(currBoard,coordinate));
-                
             }
             if(valid((coordinate%3)-1) && notExplored(exploredBoards, moveBlankLeft(currBoard,coordinate))) {
                 possibleBoards.push(moveBlankLeft(currBoard,coordinate));
@@ -105,6 +135,82 @@ vector<int> UCS(vector<int> startBoard, int coordinate) {
             }
             if(valid(coordinate-3) && notExplored(exploredBoards, moveBlankUp(currBoard,coordinate))) {
                 possibleBoards.push(moveBlankUp(currBoard,coordinate));
+            }
+        }
+        exploredBoards.push_back(currBoard);
+    }
+    std::cout << "fail" << endl;
+    return startBoard;
+}
+
+vector<int> missingTile(vector<int> startBoard, int coordinate) {
+    multimap<int,vector<int>> possibleBoards;
+    vector<vector<int>> exploredBoards;
+    int numMissing = incorrectTiles(startBoard);
+    possibleBoards.insert(std::pair<int,vector<int>>(numMissing,startBoard));
+    while(!possibleBoards.empty()) {
+        vector<int> currBoard = (*(possibleBoards.begin())).second;
+        possibleBoards.erase(possibleBoards.begin());
+        //printBoard(currBoard);
+        coordinate = findZero(currBoard);
+        if(correctBoard(currBoard)) {
+            std::cout << "good" << endl;
+            return currBoard;
+        }
+        else {
+            if(sideValid((coordinate%3)+1) && notExplored(exploredBoards, moveBlankRight(currBoard,coordinate))) {
+                numMissing = incorrectTiles(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(numMissing,moveBlankRight(currBoard,coordinate)));
+            }
+            if(valid((coordinate%3)-1) && notExplored(exploredBoards, moveBlankLeft(currBoard,coordinate))) {
+                numMissing = incorrectTiles(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(numMissing,moveBlankLeft(currBoard,coordinate)));
+            }
+            if(valid(coordinate+3) && notExplored(exploredBoards, moveBlankDown(currBoard,coordinate))) {
+                numMissing = incorrectTiles(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(numMissing,moveBlankDown(currBoard,coordinate)));
+            }
+            if(valid(coordinate-3) && notExplored(exploredBoards, moveBlankUp(currBoard,coordinate))) {
+                numMissing = incorrectTiles(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(numMissing,moveBlankUp(currBoard,coordinate)));
+            }
+        }
+        exploredBoards.push_back(currBoard);
+    }
+    std::cout << "fail" << endl;
+    return startBoard;
+}
+
+vector<int> euclidean(vector<int> startBoard, int coordinate) {
+    multimap<int,vector<int>> possibleBoards;
+    vector<vector<int>> exploredBoards;
+    int currBoardDistance = totDistance(startBoard);
+    possibleBoards.insert(std::pair<int,vector<int>>(currBoardDistance,startBoard));
+    while(!possibleBoards.empty()) {
+        vector<int> currBoard = (*(possibleBoards.begin())).second;
+        possibleBoards.erase(possibleBoards.begin());
+        //printBoard(currBoard);
+        coordinate = findZero(currBoard);
+        if(correctBoard(currBoard)) {
+            std::cout << "good" << endl;
+            return currBoard;
+        }
+        else {
+            if(sideValid((coordinate%3)+1) && notExplored(exploredBoards, moveBlankRight(currBoard,coordinate))) {
+                currBoardDistance = totDistance(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(currBoardDistance,moveBlankRight(currBoard,coordinate)));
+            }
+            if(valid((coordinate%3)-1) && notExplored(exploredBoards, moveBlankLeft(currBoard,coordinate))) {
+                currBoardDistance = totDistance(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(currBoardDistance,moveBlankLeft(currBoard,coordinate)));
+            }
+            if(valid(coordinate+3) && notExplored(exploredBoards, moveBlankDown(currBoard,coordinate))) {
+                currBoardDistance = totDistance(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(currBoardDistance,moveBlankDown(currBoard,coordinate)));
+            }
+            if(valid(coordinate-3) && notExplored(exploredBoards, moveBlankUp(currBoard,coordinate))) {
+                currBoardDistance = totDistance(currBoard);
+                possibleBoards.insert(std::pair<int,vector<int>>(currBoardDistance,moveBlankUp(currBoard,coordinate)));
             }
         }
         exploredBoards.push_back(currBoard);
@@ -152,22 +258,30 @@ int main() {
     std::cout << "Enter your choice of algorithm" << std::endl;
     std::cout << "Uniform Cost Search" << std::endl;
     std::cout << "A* with the Misplaced Tile heuristic" << std::endl;
-    std::cout << "A* with the Euclidean distance heuristic" << std::endl;
+    std::cout << "A* with the Euclidean Distance heuristic" << std::endl;
 
     cin >> input;
     vector<int> solvedBoard;
     int coordinate = findZero(board);
     if(input == 1) {
         solvedBoard = UCS(board, coordinate);
-        if(solvedBoard.at(0) == 0) {
+        if(solvedBoard == board) {
             std::cout << "Impossible to solve" << endl;
         }
         //uniform cost search
     }
     else if(input == 2) {
+        solvedBoard = missingTile(board, coordinate);
+        if(solvedBoard == board) {
+            std::cout << "Impossible to solve" << endl;
+        }
         //A* with the Misplaced Tile heuristic
     }
     else if(input == 3) {
+        solvedBoard = euclidean(board, coordinate);
+        if(solvedBoard == board) {
+            std::cout << "Impossible to solve" << endl;
+        }
         //A* with the Euclidean distance heuristic
     }
     else {
@@ -178,35 +292,8 @@ int main() {
 }
 
 
-// int[3][3] missingTile(int startBoard[3][3]) {
-//     queue<int[3][3]> possibleBoards;
-    
-//     possibleBoards.push(startBoard);
-//     while(!possibleBoards.empty()) {
-//         int currBoard[3][3] = possibleBoards.pop();
-//         if(correctBoard(currBoard)) {
-//             return currBoard;
-//         }
-//         else {
-//             createPossibleBoards(currBoard,)
-//         }
-//     }
-// }
 
-// int[3][3] euclidean(int startBoard[3][3]) {
-//     queue<int[3][3]> possibleBoards;
-    
-//     possibleBoards.push(startBoard);
-//     while(!possibleBoards.empty()) {
-//         Node* currBoard = possibleBoards.pop();
-//         if(correctBoard(currBoard)) {
-//             return currBoard;
-//         }
-//         else {
-            
-//         }
-//     }
-// }
+
 
 
 // void createPossibleBoards(int currBoard[3][3], int xZero, int yZero) {
