@@ -2,5 +2,8 @@
 
 class Tree {
     private:
-        Node root;
-}
+        Node* root;
+    public:
+        Tree(Node* startBoard);
+        Node* getRoot();
+};

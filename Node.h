@@ -1,20 +1,25 @@
-
+#include <vector>
 
 class Node {
     private:
-        int board[3][3];
+        vector<int> board;
         Node* blankLeft;
         Node* blankRight;
         Node* blankUp;
         Node* blankDown;
+        Node* parentNode;
     public:
-        Node();
+        Node(vector<int> slideBoard);
+        vector<int> getBoard();
         Node* getBlankDown();
         Node* getBlankUp();
         Node* getBlankLeft();
         Node* getBlankRight();
-        void setBlankDown();
-        void setBlankUp();
-        void setBlankLeft();
-        void setBlankRight();
-}
+        Node* getParentNode();
+        void setBlankDown(Node* newDown);
+        void setBlankUp(Node* newUp);
+        void setBlankLeft(Node* newLeft);
+        void setBlankRight(Node* newRight);
+        void setParentNode(Node* parent);
+        void setBoard();
+};
