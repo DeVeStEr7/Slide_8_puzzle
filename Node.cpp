@@ -1,12 +1,16 @@
-#include "Node.h"
 #include <vector>
+#include "Node.h"
 
-Node::Node(std::vector<int> slideBoard, int nodeDepth) {
+Node::Node(std::vector<int> slideBoard, int nodeDepth, double nodeHeuristic) {
     board = slideBoard;
     depth = nodeDepth;
+    heuristic = nodeHeuristic;
 }
 int Node::getDepth() {
     return depth;
+}
+double Node::getHeuristic() {
+    return heuristic;
 }
 Node* Node::getBlankDown() {
     return blankDown;
@@ -26,6 +30,9 @@ Node* Node::getParentNode() {
 vector<int> Node::getBoard() {
     return board;
 }
+void Node::setHeuristic(double newHeuristic) {
+    heuristic = newHeuristic;
+}
 void Node::setBlankDown(Node* newDown) {
     blankDown = newDown;
 }
@@ -37,9 +44,6 @@ void Node::setBlankRight(Node* newRight) {
 }
 void Node::setBlankLeft(Node* newLeft) {
     blankLeft = newLeft;
-}
-void Node::setParentNode(Node* parent) {
-    parentNode = parent;
 }
 void Node::setParentNode(Node* parent) {
     parentNode = parent;

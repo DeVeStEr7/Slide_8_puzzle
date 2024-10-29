@@ -12,20 +12,23 @@ class Node {
     private:
         vector<int> board;
         int depth;
+        double heuristic;
         Node* blankLeft;
         Node* blankRight;
         Node* blankUp;
         Node* blankDown;
         Node* parentNode;
     public:
-        Node(vector<int> slideBoard, int depth);
+        Node(vector<int> slideBoard, int nodeDepth, double nodeHeuristic);
         vector<int> getBoard();
         int getDepth();
+        double getHeuristic();
         Node* getBlankDown();
         Node* getBlankUp();
         Node* getBlankLeft();
         Node* getBlankRight();
         Node* getParentNode();
+        void setHeuristic(double heuristic);
         void setBlankDown(Node* newDown);
         void setBlankUp(Node* newUp);
         void setBlankLeft(Node* newLeft);
@@ -34,12 +37,16 @@ class Node {
         void setBoard();
 };
 
-Node::Node(std::vector<int> slideBoard, int nodeDepth) {
+Node::Node(std::vector<int> slideBoard, int nodeDepth, double nodeHeuristic) {
     board = slideBoard;
     depth = nodeDepth;
+    heuristic = nodeHeuristic;
 }
 int Node::getDepth() {
     return depth;
+}
+double Node::getHeuristic() {
+    return heuristic;
 }
 Node* Node::getBlankDown() {
     return blankDown;
@@ -59,6 +66,9 @@ Node* Node::getParentNode() {
 vector<int> Node::getBoard() {
     return board;
 }
+void Node::setHeuristic(double newHeuristic) {
+    heuristic = newHeuristic;
+}
 void Node::setBlankDown(Node* newDown) {
     blankDown = newDown;
 }
@@ -74,7 +84,6 @@ void Node::setBlankLeft(Node* newLeft) {
 void Node::setParentNode(Node* parent) {
     parentNode = parent;
 }
-
 
 class Tree {
     private:
@@ -165,8 +174,8 @@ int findZero(vector<int> board) {
 }
 int incorrectTiles(vector<int> board) {
     int count = 0;
-    for(int i = 0; i < board.size(); i++) {
-        if(board.at(i) != ((i+1)%9)) {
+    for(int i = 0; i < board.size()-1; i++) {
+        if(board.at(i) != (i+1)) {
             count++;
         }
     }
@@ -196,6 +205,21 @@ double totDistance(vector<int> board) {
     return count;
 }
 
+void pathTraverse(Node* currBoard, Tree slidePuzzle) {
+    if(currBoard->getBoard() == slidePuzzle.getRoot()->getBoard()) {
+        printBoard(currBoard->getBoard());
+
+        cout << "The best way to expand with g(n) = " << currBoard->getDepth() << " and h(n) = " << currBoard->getHeuristic() << " is:" << endl;
+    }
+    else {
+        pathTraverse(currBoard->getParentNode(), slidePuzzle);
+
+        printBoard(currBoard->getBoard());
+        if(!correctBoard(currBoard->getBoard()))
+            cout << "The best way to expand with g(n) = " << currBoard->getDepth() << " and h(n) = " << currBoard->getHeuristic() << " is:" << endl;
+    }
+}
+
 Node* UCS(Node* startBoard, int coordinate, Tree slidePuzzle) {
     queue<Node*> possibleBoards;
     vector<vector<int>> exploredBoards;
@@ -208,33 +232,38 @@ Node* UCS(Node* startBoard, int coordinate, Tree slidePuzzle) {
         //printBoard(currBoard->getBoard());
         coordinate = findZero(currBoard->getBoard());
 
-        cout << currBoard->getDepth() << endl;
-        
+        //cout << currBoard->getDepth() << endl;
+
         if(correctBoard(currBoard->getBoard())) {
-            std::cout << "good" << endl;
+            pathTraverse(currBoard,slidePuzzle);
+
+            cout << "GOAL!!!" << endl;
+            cout << "To solve this problem, the search algorithm expanded a total of " << exploredBoards.size() << " nodes." << endl;
+            cout << "The maximum number of nodes in the queue at one time: " << possibleBoards.size() << endl;
+            cout << "The depth of the goal node was " << currBoard->getDepth() << endl;
             return currBoard;
         }
         else {
             if(sideValid((coordinate%3)+1) && notExplored(exploredBoards, moveBlankRight(currBoard->getBoard(),coordinate))) {
-                Node* rightBoard = new Node(moveBlankRight(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* rightBoard = new Node(moveBlankRight(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 possibleBoards.push(rightBoard);
                 rightBoard->setParentNode(currBoard);
                 currBoard->setBlankRight(rightBoard);
             }
             if(valid((coordinate%3)-1) && notExplored(exploredBoards, moveBlankLeft(currBoard->getBoard(),coordinate))) {
-                Node* leftBoard = new Node(moveBlankLeft(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* leftBoard = new Node(moveBlankLeft(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 possibleBoards.push(leftBoard);
                 leftBoard->setParentNode(currBoard);
                 currBoard->setBlankLeft(leftBoard);
             }
             if(valid(coordinate+3) && notExplored(exploredBoards, moveBlankDown(currBoard->getBoard(),coordinate))) {
-                Node* downBoard = new Node(moveBlankDown(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* downBoard = new Node(moveBlankDown(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 possibleBoards.push(downBoard);
                 downBoard->setParentNode(currBoard);
                 currBoard->setBlankDown(downBoard);
             }
             if(valid(coordinate-3) && notExplored(exploredBoards, moveBlankUp(currBoard->getBoard(),coordinate))) {
-                Node* upBoard = new Node(moveBlankUp(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* upBoard = new Node(moveBlankUp(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 possibleBoards.push(upBoard);
                 upBoard->setParentNode(currBoard);
                 currBoard->setBlankUp(upBoard);
@@ -257,34 +286,43 @@ Node* missingTile(Node* startBoard, int coordinate, Tree slidePuzzle) {
         //printBoard(currBoard);
         coordinate = findZero(currBoard->getBoard());
         if(correctBoard(currBoard->getBoard())) {
-            std::cout << "good" << endl;
+            pathTraverse(currBoard,slidePuzzle);
+
+            cout << "GOAL!!!" << endl;
+            cout << "To solve this problem, the search algorithm expanded a total of " << exploredBoards.size() << " nodes." << endl;
+            cout << "The maximum number of nodes in the queue at one time: " << possibleBoards.size() << endl;
+            cout << "The depth of the goal node was " << currBoard->getDepth() << endl;
             return currBoard;
         }
         else {
             if(sideValid((coordinate%3)+1) && notExplored(exploredBoards, moveBlankRight(currBoard->getBoard(),coordinate))) {
-                Node* rightBoard = new Node(moveBlankRight(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* rightBoard = new Node(moveBlankRight(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 numMissing = incorrectTiles(rightBoard->getBoard());
+                rightBoard->setHeuristic(numMissing);
                 possibleBoards.insert(std::pair<int,Node*>(numMissing+rightBoard->getDepth(), rightBoard));
                 rightBoard->setParentNode(currBoard);
                 currBoard->setBlankRight(rightBoard);
             }
             if(valid((coordinate%3)-1) && notExplored(exploredBoards, moveBlankLeft(currBoard->getBoard(),coordinate))) {
-                Node* leftBoard = new Node(moveBlankLeft(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* leftBoard = new Node(moveBlankLeft(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 numMissing = incorrectTiles(leftBoard->getBoard());
+                leftBoard->setHeuristic(numMissing);
                 possibleBoards.insert(std::pair<int,Node*>(numMissing+leftBoard->getDepth(), leftBoard));
                 leftBoard->setParentNode(currBoard);
                 currBoard->setBlankLeft(leftBoard);
             }
             if(valid(coordinate+3) && notExplored(exploredBoards, moveBlankDown(currBoard->getBoard(),coordinate))) {
-                Node* downBoard = new Node(moveBlankDown(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* downBoard = new Node(moveBlankDown(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 numMissing = incorrectTiles(downBoard->getBoard());
+                downBoard->setHeuristic(numMissing);
                 possibleBoards.insert(std::pair<int,Node*>(numMissing+downBoard->getDepth(), downBoard));
                 downBoard->setParentNode(currBoard);
                 currBoard->setBlankDown(downBoard);
             }
             if(valid(coordinate-3) && notExplored(exploredBoards, moveBlankUp(currBoard->getBoard(),coordinate))) {
-                Node* upBoard = new Node(moveBlankUp(currBoard->getBoard(),coordinate),currBoard->getDepth()+1);
+                Node* upBoard = new Node(moveBlankUp(currBoard->getBoard(),coordinate),currBoard->getDepth()+1,0);
                 numMissing = incorrectTiles(upBoard->getBoard());
+                upBoard->setHeuristic(numMissing);
                 possibleBoards.insert(std::pair<int,Node*>(numMissing+upBoard->getDepth(), upBoard));
                 upBoard->setParentNode(currBoard);
                 currBoard->setBlankUp(upBoard);
@@ -308,34 +346,44 @@ Node* euclidean(Node* startBoard, int coordinate, Tree slidePuzzle) {
         //printBoard(currBoard->getBoard());
         coordinate = findZero(currBoard->getBoard());
         if(correctBoard(currBoard->getBoard())) {
-            std::cout << "good" << endl;
+            pathTraverse(currBoard,slidePuzzle);
+
+            cout << "GOAL!!!" << endl;
+            cout << "To solve this problem, the search algorithm expanded a total of " << exploredBoards.size() << " nodes." << endl;
+            cout << "The maximum number of nodes in the queue at one time: " << possibleBoards.size() << endl;
+            cout << "The depth of the goal node was " << currBoard->getDepth() << endl;
+            
             return currBoard;
         }
         else {
             if(sideValid((coordinate%3)+1) && notExplored(exploredBoards, moveBlankRight(currBoard->getBoard(),coordinate))) {
-                Node* rightBoard = new Node(moveBlankRight(currBoard->getBoard(),coordinate), currBoard->getDepth()+1);
+                Node* rightBoard = new Node(moveBlankRight(currBoard->getBoard(),coordinate), currBoard->getDepth()+1,0);
                 currBoardDistance = totDistance(rightBoard->getBoard());
+                rightBoard->setHeuristic(currBoardDistance);
                 possibleBoards.insert(std::pair<int,Node*>(currBoardDistance+rightBoard->getDepth(),rightBoard));
                 rightBoard->setParentNode(currBoard);
                 currBoard->setBlankRight(rightBoard);
             }
             if(valid((coordinate%3)-1) && notExplored(exploredBoards, moveBlankLeft(currBoard->getBoard(),coordinate))) {
-                Node* leftBoard = new Node(moveBlankLeft(currBoard->getBoard(),coordinate), currBoard->getDepth()+1);
+                Node* leftBoard = new Node(moveBlankLeft(currBoard->getBoard(),coordinate), currBoard->getDepth()+1,0);
                 currBoardDistance = totDistance(leftBoard->getBoard());
+                leftBoard->setHeuristic(currBoardDistance);
                 possibleBoards.insert(std::pair<int,Node*>(currBoardDistance+leftBoard->getDepth(),leftBoard));
                 leftBoard->setParentNode(currBoard);
                 currBoard->setBlankRight(leftBoard);
             }
             if(valid(coordinate+3) && notExplored(exploredBoards, moveBlankDown(currBoard->getBoard(),coordinate))) {
-                Node* downBoard = new Node(moveBlankDown(currBoard->getBoard(),coordinate), currBoard->getDepth()+1);
+                Node* downBoard = new Node(moveBlankDown(currBoard->getBoard(),coordinate), currBoard->getDepth()+1,0);
                 currBoardDistance = totDistance(downBoard->getBoard());
+                downBoard->setHeuristic(currBoardDistance);
                 possibleBoards.insert(std::pair<int,Node*>(currBoardDistance+downBoard->getDepth(),downBoard));
                 downBoard->setParentNode(currBoard);
                 currBoard->setBlankRight(downBoard);
             }
             if(valid(coordinate-3) && notExplored(exploredBoards, moveBlankUp(currBoard->getBoard(),coordinate))) {
-                Node* upBoard = new Node(moveBlankUp(currBoard->getBoard(),coordinate), currBoard->getDepth()+1);
+                Node* upBoard = new Node(moveBlankUp(currBoard->getBoard(),coordinate), currBoard->getDepth()+1,0);
                 currBoardDistance = totDistance(upBoard->getBoard());
+                upBoard->setHeuristic(currBoardDistance);
                 possibleBoards.insert(std::pair<int,Node*>(currBoardDistance+upBoard->getDepth(),upBoard));
                 upBoard->setParentNode(currBoard);
                 currBoard->setBlankRight(upBoard);
@@ -345,15 +393,7 @@ Node* euclidean(Node* startBoard, int coordinate, Tree slidePuzzle) {
     std::cout << "fail" << endl;
     return startBoard;
 }
-void pathTraverse(Node* currBoard, Tree slidePuzzle) {
-    if(currBoard->getBoard() == slidePuzzle.getRoot()->getBoard()) {
-        printBoard(currBoard->getBoard());
-    }
-    else {
-        pathTraverse(currBoard->getParentNode(), slidePuzzle);
-        printBoard(currBoard->getBoard());
-    }
-}
+
 
 int main() {
     std::cout << "Welcome to dalex017 8 puzzle solver." << std::endl;
@@ -399,7 +439,7 @@ int main() {
     cin >> input;
     Node* solvedBoard;
 
-    Node* startBoard = new Node(board, 1);
+    Node* startBoard = new Node(board, 1,0);
     Tree slidePuzzle(startBoard);
     int coordinate = findZero(board);
     if(input == 1) {
@@ -407,6 +447,7 @@ int main() {
         //uniform cost search
     }
     else if(input == 2) {
+        startBoard->setHeuristic(incorrectTiles(startBoard->getBoard()));
         solvedBoard = missingTile(startBoard, coordinate, slidePuzzle);
         // if(solvedBoard == board && !solvedBoard(board)) {
         //     std::cout << "Impossible to solve" << endl;
@@ -414,6 +455,7 @@ int main() {
         //A* with the Misplaced Tile heuristic
     }
     else if(input == 3) {
+        startBoard->setHeuristic(totDistance(startBoard->getBoard()));
         solvedBoard = euclidean(startBoard, coordinate, slidePuzzle);
         // if(solvedBoard == board && !solvedBoard(board)) {
         //     std::cout << "Impossible to solve" << endl;
@@ -424,8 +466,5 @@ int main() {
         std::cout << "Not a valid input" << std::endl;
         return 0;
     }
-    printBoard(solvedBoard->getBoard());
-    cout << endl << endl << "SOLUTION PATH TAKEN" << endl;
-    pathTraverse(solvedBoard,slidePuzzle);
-}
 
+}
