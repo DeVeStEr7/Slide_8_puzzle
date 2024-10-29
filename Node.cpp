@@ -1,8 +1,12 @@
 #include "Node.h"
 #include <vector>
 
-Node::Node(std::vector<int> slideBoard) {
+Node::Node(std::vector<int> slideBoard, int nodeDepth) {
     board = slideBoard;
+    depth = nodeDepth;
+}
+int Node::getDepth() {
+    return depth;
 }
 Node* Node::getBlankDown() {
     return blankDown;
@@ -33,6 +37,9 @@ void Node::setBlankRight(Node* newRight) {
 }
 void Node::setBlankLeft(Node* newLeft) {
     blankLeft = newLeft;
+}
+void Node::setParentNode(Node* parent) {
+    parentNode = parent;
 }
 void Node::setParentNode(Node* parent) {
     parentNode = parent;

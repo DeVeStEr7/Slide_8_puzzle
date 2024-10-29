@@ -3,14 +3,16 @@
 class Node {
     private:
         vector<int> board;
+        int depth;
         Node* blankLeft;
         Node* blankRight;
         Node* blankUp;
         Node* blankDown;
         Node* parentNode;
     public:
-        Node(vector<int> slideBoard);
+        Node(vector<int> slideBoard, int depth);
         vector<int> getBoard();
+        int getDepth();
         Node* getBlankDown();
         Node* getBlankUp();
         Node* getBlankLeft();
