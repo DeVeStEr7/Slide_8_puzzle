@@ -270,7 +270,7 @@ Node* UCS(Node* startBoard, int coordinate, Tree slidePuzzle) {
             }
         }
     }
-    startBoard.at(0) = 0;
+    startBoard->getBoard().at(0) = 0;
     return startBoard;
 }
 
@@ -329,7 +329,7 @@ Node* missingTile(Node* startBoard, int coordinate, Tree slidePuzzle) {
             }
         }
     }
-    startBoard.at(0) = 0;
+    startBoard->getBoard().at(0) = 0;
     return startBoard;
 }
 
@@ -389,7 +389,7 @@ Node* euclidean(Node* startBoard, int coordinate, Tree slidePuzzle) {
             }
         }
     }
-    startBoard.at(0) = 0;
+    startBoard->getBoard().at(0) = 0;
     return startBoard;
 }
 
@@ -443,7 +443,7 @@ int main() {
     int coordinate = findZero(board);
     if(input == 1) {
         solvedBoard = UCS(startBoard, coordinate, slidePuzzle);
-        if(solvedBoard.at(0) == 0) {
+        if(solvedBoard->getBoard().at(0) == 0) {
             std::cout << "Impossible to solve" << endl;
         }
         //uniform cost search
@@ -451,7 +451,7 @@ int main() {
     else if(input == 2) {
         startBoard->setHeuristic(incorrectTiles(startBoard->getBoard()));
         solvedBoard = missingTile(startBoard, coordinate, slidePuzzle);
-        if(solvedBoard.at(0) == 0) {
+        if(solvedBoard->getBoard().at(0) == 0) {
             std::cout << "Impossible to solve" << endl;
         }
         //A* with the Missing tile heuristic
@@ -459,7 +459,7 @@ int main() {
     else if(input == 3) {
         startBoard->setHeuristic(totDistance(startBoard->getBoard()));
         solvedBoard = euclidean(startBoard, coordinate, slidePuzzle);
-        if(solvedBoard.at(0) == 0) {
+        if(solvedBoard->getBoard().at(0) == 0) {
             std::cout << "Impossible to solve" << endl;
         }
         //A* with the Euclidean distance heuristic
