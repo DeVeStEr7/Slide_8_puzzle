@@ -270,7 +270,7 @@ Node* UCS(Node* startBoard, int coordinate, Tree slidePuzzle) {
             }
         }
     }
-    std::cout << "fail" << endl;
+    startBoard.at(0) = 0;
     return startBoard;
 }
 
@@ -329,14 +329,13 @@ Node* missingTile(Node* startBoard, int coordinate, Tree slidePuzzle) {
             }
         }
     }
-    std::cout << "fail" << endl;
+    startBoard.at(0) = 0;
     return startBoard;
 }
 
 Node* euclidean(Node* startBoard, int coordinate, Tree slidePuzzle) {
     multimap<double, Node*> possibleBoards;
     vector<vector<int>> exploredBoards;
-    cout << startBoard->getDepth() << endl;
     double currBoardDistance = totDistance(startBoard->getBoard());
     possibleBoards.insert(std::pair<int,Node*>(currBoardDistance,startBoard));
     while(!possibleBoards.empty()) {
@@ -390,7 +389,7 @@ Node* euclidean(Node* startBoard, int coordinate, Tree slidePuzzle) {
             }
         }
     }
-    std::cout << "fail" << endl;
+    startBoard.at(0) = 0;
     return startBoard;
 }
 
@@ -444,22 +443,25 @@ int main() {
     int coordinate = findZero(board);
     if(input == 1) {
         solvedBoard = UCS(startBoard, coordinate, slidePuzzle);
+        if(solvedBoard.at(0) == 0) {
+            std::cout << "Impossible to solve" << endl;
+        }
         //uniform cost search
     }
     else if(input == 2) {
         startBoard->setHeuristic(incorrectTiles(startBoard->getBoard()));
         solvedBoard = missingTile(startBoard, coordinate, slidePuzzle);
-        // if(solvedBoard == board && !solvedBoard(board)) {
-        //     std::cout << "Impossible to solve" << endl;
-        // }
-        //A* with the Misplaced Tile heuristic
+        if(solvedBoard.at(0) == 0) {
+            std::cout << "Impossible to solve" << endl;
+        }
+        //A* with the Missing tile heuristic
     }
     else if(input == 3) {
         startBoard->setHeuristic(totDistance(startBoard->getBoard()));
         solvedBoard = euclidean(startBoard, coordinate, slidePuzzle);
-        // if(solvedBoard == board && !solvedBoard(board)) {
-        //     std::cout << "Impossible to solve" << endl;
-        // }
+        if(solvedBoard.at(0) == 0) {
+            std::cout << "Impossible to solve" << endl;
+        }
         //A* with the Euclidean distance heuristic
     }
     else {
